@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "https://ps7-backend-3.onrender.com"
+  import.meta.env.VITE_API_BASE_URL || "https://ps7-backend-fhze.onrender.com"
 ).replace(/\/$/, "");
 
 export default function UploadView() {
@@ -50,7 +50,16 @@ export default function UploadView() {
       });
 
       if (!response.ok) {
-        throw new Error("Prediction failed");
+        let backendMessage = "Prediction failed";
+        try {
+          const errorData = await response.json();
+          if (errorData?.error) {
+            backendMessage = errorData.error;
+          }
+        } catch {
+          // Keep default message when response body is not JSON.
+        }
+        throw new Error(backendMessage);
       }
 
       const data = await response.json();
@@ -86,9 +95,9 @@ export default function UploadView() {
       }
     } catch (error) {
       console.error("Error during prediction:", error);
-      alert(
-        "Error during prediction. Please make sure the backend is running.",
-      );
+      const message =
+        error instanceof Error ? error.message : "Unexpected prediction error";
+      alert(`Prediction failed: ${message}`);
     } finally {
       setIsPredicting(false);
     }
